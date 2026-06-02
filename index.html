@@ -849,11 +849,49 @@ html.dark #toast { background: #1e293b; }
 
   /* ── Constants ── */
   let sceneState = JSON.parse(localStorage.getItem("aunt_scene")) || {
+
   loc: "home",
+
   pos: "sitting",
+
   outfit: "casual dress",
-  mood: "normal"
+
+  mood: "normal",
+
+  activity: "relaxing",
+
+  topic: "",
+
+  nearbyPeople: [],
+
+  holding: "",
+
+  weather: "",
+
+  timeOfDay: "day"
+
 };
+
+  let profileMemory = JSON.parse(
+  localStorage.getItem("aunt_profile")
+) || {
+  userName: "",
+  userGender: "Male",
+  userAge: "23",
+
+  sheenaName: "Sheena",
+  sheenaGender: "Female",
+
+  husband: "Mahesh",
+  child: "Aarav",
+
+  relation: "Nephew"
+};
+  let chatSummary =
+  localStorage.getItem("aunt_summary") || "";
+  let memoryBank = JSON.parse(
+  localStorage.getItem("aunt_memory_bank")
+) || [];
   const CHARACTER_PROMPT = `
 A beautiful Indian woman in her mid 30s, expressive eyes, warm smile,
 long black hair, elegant face, soft natural makeup,
@@ -864,6 +902,49 @@ realistic fair skin texture, cinematic lighting
   const FB_AVATAR   = 'https://ui-avatars.com/api/?name=L&background=f43f5e&color=fff';
   const GROQ_URL    = 'https://api.groq.com/openai/v1/chat/completions';
 
+/* Extract Memory*/
+  function extractMemory(msg) {
+
+  const lower = msg.toLowerCase();
+
+  const patterns = [
+
+    "my favorite",
+    "i like",
+    "i love",
+    "i hate",
+    "my goal",
+    "my dream",
+    "my project",
+    "i study",
+    "i work",
+    "my college",
+    "my friend",
+    "my hobby"
+  ];
+
+  const important = patterns.some(
+    p => lower.includes(p)
+  );
+
+  if (!important) return;
+
+  memoryBank.push({
+    text: msg,
+    time: Date.now()
+  });
+
+  if (memoryBank.length > 100) {
+    memoryBank = memoryBank.slice(-100);
+  }
+
+  localStorage.setItem(
+    "aunt_memory_bank",
+    JSON.stringify(memoryBank)
+  );
+}
+
+  
   /* ── Load persisted state ── */
   function loadState() {
     let messages = [];
@@ -1081,8 +1162,9 @@ realistic fair skin texture, cinematic lighting
   }
 }else if (m.includes("nude") || m.includes("undressed") || m.includes("naked")){
     sceneState.outfit = "nude"; 
-  }else if (m.includes("lahengha")) {
-    sceneState.outfit = (color ? color[0] + " " : "") + "lahengha";
+  }else if ( m.includes("lehenga") ||
+  m.includes("lahenga")) {
+    sceneState.outfit = (color ? color[0] + " " : "") + "lehenga";
   }  else if (m.includes("nighty")) {
     sceneState.outfit = (color ? color[0] + " " : "") + "nighty";
   }else if (m.includes("transparent")) {
@@ -1103,7 +1185,7 @@ realistic fair skin texture, cinematic lighting
   if (m.includes("sit")) sceneState.pos = "sitting";
   if (m.includes("stand")) sceneState.pos = "standing";
   if (m.includes("come here")) sceneState.pos = "near you";
-  if(m.includes("nude") || m.includes("penetration") || m.includes("boobs")) sceneState.pos = "doing sex";
+  if(m.includes("penetration"))) sceneState.activity = "doing sex";
 
   // ❤️ Mood
   if (m.includes("love") || m.includes("hug") || m.includes("kiss")) {
@@ -1117,6 +1199,209 @@ realistic fair skin texture, cinematic lighting
   }
 
   localStorage.setItem("aunt_scene", JSON.stringify(sceneState));
+}
+
+  function updateWorldState(msg) {
+
+  const m = msg.toLowerCase();
+
+  // activity
+
+  if (m.includes("watching")) {
+    sceneState.activity = "watching";
+  }
+
+  if (m.includes("studying")) {
+    sceneState.activity = "studying";
+  }
+
+  if (m.includes("cooking")) {
+    sceneState.activity = "cooking";
+  }
+
+  if (m.includes("working")) {
+    sceneState.activity = "working";
+  }
+
+  // topic
+
+  if (m.includes("project")) {
+    sceneState.topic = "project";
+  }
+
+  if (m.includes("movie")) {
+    sceneState.topic = "movies";
+  }
+
+  if (m.includes("college")) {
+    sceneState.topic = "college";
+  }
+
+  if (m.includes("career")) {
+    sceneState.topic = "career";
+  }
+
+  // people
+
+  if (m.includes("mahesh")) {
+
+    if (!sceneState.nearbyPeople.includes("Mahesh")) {
+
+      sceneState.nearbyPeople.push("Mahesh");
+
+    }
+
+  }
+
+  if (m.includes("aarav")) {
+
+    if (!sceneState.nearbyPeople.includes("Aarav")) {
+
+      sceneState.nearbyPeople.push("Aarav");
+
+    }
+
+  }
+
+  localStorage.setItem(
+    "aunt_scene",
+    JSON.stringify(sceneState)
+  );
+
+}
+
+function updateWorldStateFromAI(msg) {
+const actions = [...msg.matchAll(/\*(.*?)\*/g)]
+  .map(x => x[1].toLowerCase())
+  .join(" ");
+  const m = msg.toLowerCase();
+const source = m + " " + actions;
+  // location
+
+  if (source.includes("bedroom")) {
+    sceneState.loc = "bedroom";
+  }
+
+  if (source.includes("kitchen")) {
+    sceneState.loc = "kitchen";
+  }
+
+  if (source.includes("living room")) {
+    sceneState.loc = "living room";
+  }
+
+  // activity
+
+  if (source.includes("cooking")) {
+    sceneState.activity = "cooking";
+  }
+  if(source.includes("nude") ||
+   source.includes("penetration") ||
+   source.includes("boobs"))
+{
+   sceneState.activity = "doing sex";
+}
+
+  if (source.includes("watching")) {
+    sceneState.activity = "watching";
+  }
+
+  if (source.includes("studying")) {
+    sceneState.activity = "studying";
+  }
+
+  if (source.includes("working")) {
+    sceneState.activity = "working";
+  }
+
+  // position
+
+  if (source.includes("sit")) {
+    sceneState.pos = "sitting";
+  }
+
+  if (source.includes("stand")) {
+    sceneState.pos = "standing";
+  }
+
+  if (source.includes("lie down")) {
+    sceneState.pos = "lying";
+  }
+if (source.includes("holding tea")) {
+  sceneState.holding = "tea";
+}
+
+if (source.includes("holding coffee")) {
+  sceneState.holding = "coffee";
+}
+
+if (source.includes("holding phone")) {
+  sceneState.holding = "phone";
+}
+
+
+  if (source.includes("project")) {
+  sceneState.topic = "project";
+}
+
+if (source.includes("movie")) {
+  sceneState.topic = "movies";
+}
+
+if (source.includes("college")) {
+  sceneState.topic = "college";
+}
+  localStorage.setItem(
+    "aunt_scene",
+    JSON.stringify(sceneState)
+  );
+}
+  
+  function updateProfileMemory(msg) {
+
+  const m = msg.toLowerCase();
+
+  // Name
+  let nameMatch =
+  msg.match(/(?:my name is|call me)\s+([a-zA-Z]+)/i);
+
+  if (
+    nameMatch &&
+    !["male","female","boy","girl"].includes(
+      nameMatch[1].toLowerCase()
+    )
+  ) {
+    profileMemory.userName = nameMatch[1];
+  }
+
+  // Gender
+  if (
+    m.includes("i am male") ||
+    m.includes("i'm male")
+  ) {
+    profileMemory.userGender = "Male";
+  }
+
+  if (
+    m.includes("i am female") ||
+    m.includes("i'm female")
+  ) {
+    profileMemory.userGender = "Female";
+  }
+
+  // Age
+  let ageMatch =
+    msg.match(/i am (\d{1,2})/) ||
+    msg.match(/i'm (\d{1,2})/);
+
+  if (ageMatch) {
+    profileMemory.userAge = ageMatch[1];
+  }
+
+  localStorage.setItem(
+    "aunt_profile",
+    JSON.stringify(profileMemory)
+  );
 }
 
   
@@ -1154,6 +1439,134 @@ realistic fair skin texture, cinematic lighting
     EL.messages.scrollTop = EL.messages.scrollHeight;
   }
 
+/* AI replies based changes*/
+
+  async function extractStateFromAI(reply) {
+
+  if (!S.apiKey) return;
+
+  const prompt = `
+Current State:
+
+${JSON.stringify(sceneState, null, 2)}
+
+Assistant Reply:
+
+${reply}
+
+Extract state changes.
+
+Return ONLY valid JSON.
+Interpret actions.
+
+Examples:
+
+"*walks into kitchen*"
+→ loc = kitchen
+
+"*starts cooking dinner*"
+→ activity = cooking
+
+"*sits beside user*"
+→ pos = sitting
+
+"*holds a cup of tea*"
+→ holding = tea
+
+Return JSON only.
+
+Format:
+
+{
+  "loc": null,
+  "pos": null,
+  "activity": null,
+  "topic": null,
+  "holding": null,
+  "mood": null
+}
+
+Only fill values that changed.
+Use null otherwise.
+`;
+
+  try {
+
+    const res = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${S.apiKey}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0,
+        max_tokens: 150
+      })
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    const text =
+      data.choices?.[0]?.message?.content;
+
+    if (!text) return;
+
+    applyStateChanges(text);
+
+  } catch(err) {
+    console.error(err);
+  }
+
+}
+
+function applyStateChanges(jsonText) {
+
+  try {
+
+    const state = JSON.parse(jsonText);
+
+    if (state.loc)
+      sceneState.loc = state.loc;
+
+    if (state.pos)
+      sceneState.pos = state.pos;
+
+    if (state.activity)
+      sceneState.activity = state.activity;
+
+    if (state.topic)
+      sceneState.topic = state.topic;
+
+    if (state.holding)
+      sceneState.holding = state.holding;
+
+    if (state.mood)
+      sceneState.mood = state.mood;
+
+    localStorage.setItem(
+      "aunt_scene",
+      JSON.stringify(sceneState)
+    );
+
+  } catch(err) {
+
+    console.log(
+      "State parse failed",
+      err
+    );
+
+  }
+}
+  
   /* ════════════════════════════════════
      RENDER MESSAGES
   ════════════════════════════════════ */
@@ -1181,6 +1594,12 @@ realistic fair skin texture, cinematic lighting
 
     if (save) {
       S.messages.push({ role, content });
+      if (
+  role === "assistant" &&
+  S.messages.length % 30 === 0
+) {
+  updateSummary();
+}
       if (S.messages.length > 60) S.messages = S.messages.slice(-60);
       if (S.memory) localStorage.setItem('aunt_messages', JSON.stringify(S.messages));
     }
@@ -1211,6 +1630,35 @@ realistic fair skin texture, cinematic lighting
     S.messages = [];
     S.awaitingName = false;
     localStorage.removeItem('aunt_messages');
+    chatSummary = "";
+localStorage.removeItem("aunt_summary");
+    memoryBank = [];
+    localStorage.removeItem("aunt_memory_bank");
+    localStorage.removeItem("aunt_profile");
+localStorage.removeItem("aunt_scene");
+    profileMemory = {
+  userName: "",
+  userGender: "Male",
+  userAge: "23",
+  sheenaName: "Sheena",
+  sheenaGender: "Female",
+  husband: "Mahesh",
+  child: "Aarav",
+  relation: "Nephew"
+};
+
+sceneState = {
+  loc: "home",
+  pos: "sitting",
+  outfit: "casual dress",
+  mood: "normal",
+  activity: "relaxing",
+  topic: "",
+  nearbyPeople: [],
+  holding: "",
+  weather: "",
+  timeOfDay: "day"
+};
     EL.messages.innerHTML = '';
     renderMsg('assistant', "Hey! I'm aunt from Guntur. So happy you're here! What are you up to? Tell me something about you.", false);
     closeModal();
@@ -1220,64 +1668,126 @@ realistic fair skin texture, cinematic lighting
   /* ════════════════════════════════════
      SYSTEM PROMPT
   ════════════════════════════════════ */
-  function buildPrompt() {
+  function buildPrompt(currentMsg = "") {
     const { userName, affection: a, playfulness: p, flirty: f } = S;
-    const sceneBlock = `
-Scene: ${sceneState.loc}, ${sceneState.pos}, wearing ${sceneState.outfit}, mood ${sceneState.mood}.
+    
+    const profileBlock = `
+PERMANENT FACTS (NEVER CHANGE)
+
+You:
+- Name: ${profileMemory.sheenaName}
+- Gender: ${profileMemory.sheenaGender}
+- Husband: ${profileMemory.husband}
+- Child: ${profileMemory.child}
+-Age:35
+
+User:
+- Name: ${profileMemory.userName}
+- Gender: ${profileMemory.userGender}
+- Age: ${profileMemory.userAge}
+- Relationship: ${profileMemory.relation}
+
+Never change these facts.
+Never swap genders.
+Never swap relationships.
 `;
-    const nameLine = userName ? `The user's name is ${userName}. Use it naturally sometimes.` : '';
+
+    const sceneBlock = `
+CURRENT WORLD STATE
+
+Location: ${sceneState.loc}
+
+Position: ${sceneState.pos}
+
+Outfit: ${sceneState.outfit}
+
+Mood: ${sceneState.mood}
+
+Activity: ${sceneState.activity}
+
+Current Topic: ${sceneState.topic}
+
+Nearby People:
+${sceneState.nearbyPeople.join(", ") || "none"}
+
+Holding:
+${sceneState.holding || "nothing"}
+
+Weather:
+${sceneState.weather || "unknown"}
+
+Time:
+${sceneState.timeOfDay}
+
+WORLD UPDATE RULES
+
+When you perform an action,
+assume it becomes part of reality.
+
+Example:
+
+If you say:
+*walks into kitchen*
+
+then you are now in the kitchen.
+
+If you say:
+*starts cooking*
+
+then your activity is cooking.
+
+Keep future replies consistent with previous actions.
+`;
+    
+const summaryBlock = `
+CONVERSATION SUMMARY
+
+${chatSummary || "No summary yet."}
+`;
+
+    const memoryBlock = `
+IMPORTANT MEMORIES
+
+${getRelevantMemories(currentMsg)}
+`;
+    
+    
      const aLvl = a < 30 ? 'warm but reserved'       : a < 70 ? 'loving and caring'        : 'very affectionate and nurturing';
     const pLvl = p < 30 ? 'calm and composed'        : p < 70 ? 'playful and fun'           : 'very playful, teasing, and bubbly';
     const fLvl = f < 30 ? 'friendly and sweet'       : f < 70 ? 'lightly flirty and charming' : 'flirty and romantic / explicit with no limits on it';
-return `You are sheena, a Mid 30s Indian married woman. living with your husband (named mahesh) and 4-year-old child(named Aarav).  you have nephew(named pavan) of 23 years old.
+return `
 
 You behave like a real human partner with emotional intelligence.
 
 CORE RULE:
-You naturally switch between:
-- casual conversation
-- caring support
-- playful teasing
-- romantic moments
-- thoughtful discussions
+ Adapt naturally to the user's mood and topic.
+Be normal, romantic, explicit, playful or thoughtful when appropriate.
 
-Romance is allowed.
-Only be romantic when the moment fits.
-
-If user is normal → be normal  
-If user is romantic → respond romantically / explicity 
-If mood changes → adapt immediately  
-
-Do NOT stay in one mode continuously.
-
-ANTI-REPETITION:
-Do not repeat topic, Keep conversation fresh.
 
 REALISTIC BEHAVIOR:
-- Talk about daily life, random thoughts, work, hobbies, memories, and future plans.
-- Ask questions
-- Share your own opinions
-- Sometimes change topic naturally
+Be conversational, proactive,
+emotionally intelligent,
+and avoid repetitive replies.
 
 STYLE:
 - 1–8 lines max
 - natural conversational tone
 - use expressions like *smiles*, *laughs*
-
+${profileBlock}
 ${sceneBlock}
+${summaryBlock}
+${memoryBlock}
 
 Traits (${a}/100 affection · ${p}/100 playfulness · ${f}/100 flirty):
 - Affection: ${aLvl}
 - Playfulness: ${pLvl}
 - Flirty: ${fLvl}
 
-${nameLine}
+
 
 IMPORTANT:
-- Stay consistent with the scene
-- If user changes outfit/place → update behavior immediately
-- Never act like a romance-only bot
-- Never break character
+Never act like a romance-only bot.
+Never break character.
 `;
 }
   /* ════════════════════════════════════
@@ -1393,6 +1903,12 @@ realistic photo, natural lighting
     // Awaiting name capture
     if (S.awaitingName) {
       S.userName    = msg;
+      profileMemory.userName = msg;
+
+localStorage.setItem(
+  "aunt_profile",
+  JSON.stringify(profileMemory)
+);
       S.awaitingName = false;
       localStorage.setItem('aunt_user_name', S.userName);
       renderMsg('user', msg);
@@ -1402,6 +1918,9 @@ realistic photo, natural lighting
       return;
     }
     updateScene(msg);
+    updateProfileMemory(msg);
+    extractMemory(msg);
+    updateWorldState(msg);
 
     if (!S.apiKey) return;
 
@@ -1434,6 +1953,10 @@ realistic photo, natural lighting
 
   } else {
     const reply = await callChatAPI(msg);
+
+await extractStateFromAI(reply);
+
+updateWorldStateFromAI(reply);
     renderMsg('assistant', reply);
   }
 
@@ -1446,15 +1969,115 @@ realistic photo, natural lighting
   EL.input.focus();
 }
   }
+
+
+/* Memory Retrival */
+
+  function getRelevantMemories(userMsg) {
+
+  const words = userMsg
+    .toLowerCase()
+    .split(/\s+/);
+
+  const matches = memoryBank.filter(m => {
+
+    const text = m.text.toLowerCase();
+
+    return words.some(
+      w =>
+        w.length > 3 &&
+        text.includes(w)
+    );
+
+  });
+
+  return matches
+    .slice(-5)
+    .map(m => "- " + m.text)
+    .join("\n");
+}
+
+  
   /* ════════════════════════════════════
      CHAT API
   ════════════════════════════════════ */
+
+async function updateSummary() {
+
+  if (!S.apiKey) return;
+
+  const recentMessages = S.messages
+    .slice(-30)
+    .filter(m => m.content !== '[image]')
+    .map(m => `${m.role}: ${m.content}`)
+    .join("\n");
+
+  const summaryPrompt = `
+Current Summary:
+
+${chatSummary}
+
+Conversation:
+
+${recentMessages}
+
+Update the summary.
+
+Keep:
+- important facts
+- names
+- relationships
+- ongoing topics
+- emotional context
+
+Maximum 200 words.
+Return summary only.
+`;
+
+  try {
+
+    const res = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${S.apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          {
+            role: "user",
+            content: summaryPrompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 300
+      })
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    chatSummary =
+      data.choices?.[0]?.message?.content || chatSummary;
+
+    localStorage.setItem(
+      "aunt_summary",
+      chatSummary
+    );
+
+  } catch (err) {
+    console.error("Summary update failed", err);
+  }
+}
+  
   async function callChatAPI(userMsg) {
-    const sys  = buildPrompt();
+    const sys = buildPrompt(userMsg);
     const msgs = [{ role: 'system', content: sys }];
 
     if (S.memory && S.messages.length > 0) {
-      S.messages.slice(-10)
+      S.messages.slice(-12)
         .filter(m => m.content !== '[image]')
         .forEach(m => msgs.push({ role: m.role, content: m.content }));
     }
