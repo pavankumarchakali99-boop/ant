@@ -2073,7 +2073,7 @@ Return summary only.
     const msgs = [{ role: 'system', content: sys }];
 
     if (S.memory && S.messages.length > 0) {
-      S.messages.slice(-12)
+      S.messages.slice(-8)
         .filter(m => m.content !== '[image]')
         .forEach(m => msgs.push({ role: m.role, content: m.content }));
     }
