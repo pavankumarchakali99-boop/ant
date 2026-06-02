@@ -1160,8 +1160,8 @@ realistic fair skin texture, cinematic lighting
   } else if (sceneState.outfit.includes("dress")) {
     sceneState.outfit = color[0] + " dress";
   }
-}else if (m.includes("nude") || m.includes("undressed") || m.includes("naked")){
-    sceneState.outfit = "nude"; 
+}else if (m.includes("nude") || m.includes("undressed") || m.includes("naked") ||m.includes("boobs")){
+    sceneState.outfit = "undressed or no clothes just bare skin"; 
   }else if ( m.includes("lehenga") ||
   m.includes("lahenga")) {
     sceneState.outfit = (color ? color[0] + " " : "") + "lehenga";
@@ -1185,7 +1185,7 @@ realistic fair skin texture, cinematic lighting
   if (m.includes("sit")) sceneState.pos = "sitting";
   if (m.includes("stand")) sceneState.pos = "standing";
   if (m.includes("come here")) sceneState.pos = "near you";
-  if(m.includes("penetration"))) sceneState.activity = "doing sex";
+  if(m.includes("penetration")) sceneState.activity = "doing sex";
 
   // ❤️ Mood
   if (m.includes("love") || m.includes("hug") || m.includes("kiss")) {
@@ -1295,12 +1295,7 @@ const source = m + " " + actions;
   if (source.includes("cooking")) {
     sceneState.activity = "cooking";
   }
-  if(source.includes("nude") ||
-   source.includes("penetration") ||
-   source.includes("boobs"))
-{
-   sceneState.activity = "doing sex";
-}
+  
 
   if (source.includes("watching")) {
     sceneState.activity = "watching";
@@ -1636,6 +1631,7 @@ localStorage.removeItem("aunt_summary");
     localStorage.removeItem("aunt_memory_bank");
     localStorage.removeItem("aunt_profile");
 localStorage.removeItem("aunt_scene");
+    localStorage.removeItem("aunt_user_name");
     profileMemory = {
   userName: "",
   userGender: "Male",
@@ -1669,7 +1665,7 @@ sceneState = {
      SYSTEM PROMPT
   ════════════════════════════════════ */
   function buildPrompt(currentMsg = "") {
-    const { userName, affection: a, playfulness: p, flirty: f } = S;
+    const { affection: a, playfulness: p, flirty: f } = S;
     
     const profileBlock = `
 PERMANENT FACTS (NEVER CHANGE)
